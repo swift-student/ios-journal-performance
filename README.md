@@ -43,12 +43,20 @@ You need to figure most of this out yourself, so we won't give too much away. Bu
 - Is the code that reconciles the received data with Core Data slow? If so, which specific part(s) of that code are taking the most time?
 - For each `EntryRepresentation` we do a fetch request to find an existing corresponding Core Data `Entry` object if there is one. Is this efficient?
 - How could you reduce the number of fetch requests you're required to do?
+
+Click below to get more hints (don't use unless you really need them!)
+
 <details>
-  <summary>Click to get another hint (don't use unless you really need it!)</summary>
+  <summary>Hint 1</summary>
   Fetch request predicates can use the `IN` operator to check for a value in an array. e.g. `NSPredicate("identifier IN %@", arrayOfIdentifiers)`.
 </details>
-- Looking up values in a dictionary given a key is quite fast. Even with a large dictionary, `let value = dictionary[key]` will be efficient. Can you use this in your code to improve performance?
 
+<details>
+  <summary>Hint 2</summary>
+  Looking up values in a dictionary given a key is quite fast. Even with a large dictionary, `let value = dictionary[key]` will be efficient. Can you use this in your code to improve performance?
+</details>
+
+<br>
 Work on this for about 1.5-2 hours, making sure you ask PMs or instructors if you get stuck. You should make improvements then profile as a continuous, iterative project (see Part 2).
 
 ## Part 2 - Profile Again!
