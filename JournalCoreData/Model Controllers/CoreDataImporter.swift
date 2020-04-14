@@ -20,14 +20,13 @@ class CoreDataImporter {
         
         self.context.perform {
             let insertRequest = NSBatchInsertRequest(entity: Entry.entity(), objects: entryDicts)
+            insertRequest.resultType = NSBatchInsertRequestResultType.objectIDs
+            let result = try? self.context.execute(insertRequest) as? NSBatchInsertResult
             
-            //insertRequest.resultType = NSBatchInsertRequestResultType.objectIDs
-            _ = try? self.context.execute(insertRequest)
-            
-//            if let objectIDs = result?.result as? [NSManagedObjectID], !objectIDs.isEmpty {
-//                let save = [NSInsertedObjectsKey: objectIDs]
-//                NSManagedObjectContext.mergeChanges(fromRemoteContextSave: save, into: [mainContext])
-//            }
+            if let objectIDs = result?.result as? [NSManagedObjectID], !objectIDs.isEmpty {
+                let save = [NSInsertedObjectsKey: objectIDs]
+                NSManagedObjectContext.mergeChanges(fromRemoteContextSave: save, into: [CoreDataStack.shared.mainContext])
+            }
             completion(nil)
         }
         
