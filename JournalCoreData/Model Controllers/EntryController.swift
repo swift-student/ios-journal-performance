@@ -9,7 +9,7 @@
 import Foundation
 import CoreData
 
-let baseURL = URL(string: "https://journal-shawngee.firebaseio.com/")!
+let baseURL = URL(string: "https://journal-performance2.firebaseio.com/")!
 
 class EntryController {
         
@@ -26,9 +26,8 @@ class EntryController {
         
         entry.title = title
         entry.bodyText = bodyText
-        entry.timestamp = Date()
+        entry.timestamp = Date().timeIntervalSinceReferenceDate
         entry.mood = mood
-        
         put(entry: entry)
         
         saveToPersistentStore()
@@ -90,7 +89,7 @@ class EntryController {
         }.resume()
     }
     
-    func fetchEntriesFromServer(completion: @escaping (([EntryRepresentation]?, Error?) -> Void) = { _,_ in }) {
+    func fetchEntriesFromServer(completion: @escaping (([[String: Any]]?, Error?) -> Void) = { _,_ in }) {
         
         let requestURL = baseURL.appendingPathExtension("json")
         
@@ -109,8 +108,12 @@ class EntryController {
             }
 
             do {
-                let entryReps = try JSONDecoder().decode([String: EntryRepresentation].self, from: data).map({$0.value})
-                completion(entryReps, nil)
+                //let entryReps = try JSONDecoder().decode([String: EntryRepresentation].self, from: data).map({$0.value})
+                guard let entryDictsByID = try JSONSerialization.jsonObject(with: data) as? [String: [String: Any]] else {
+                    throw NSError(domain: "Unable to cast JSON object to [String: [String: Any]]", code: 0)
+                }
+                let entryDicts = Array(entryDictsByID.values)
+                completion(entryDicts, nil)
             } catch {
                 NSLog("Error decoding JSON data: \(error)")
                 completion(nil, error)
@@ -120,20 +123,20 @@ class EntryController {
     }
     
     func refreshEntriesFromServer(completion: @escaping ((Error?) -> Void) = { _ in }) {
-        fetchEntriesFromServer { (representations, error) in
+        fetchEntriesFromServer { (entryDicts, error) in
             if error != nil { return }
-            guard let representations = representations else { return }
+            guard let entryDicts = entryDicts else { return }
             let moc = CoreDataStack.shared.container.newBackgroundContext()
-            self.updateEntries(with: representations, in: moc, completion: completion)
+            self.updateEntries(with: entryDicts, in: moc, completion: completion)
         }
     }
     
-    private func updateEntries(with representations: [EntryRepresentation],
+    private func updateEntries(with entryDicts: [[String: Any]],
                                in context: NSManagedObjectContext,
                                completion: @escaping ((Error?) -> Void) = { _ in }) {
         
         importer = CoreDataImporter(context: context)
-        importer?.sync(entries: representations) { (error) in
+        importer?.sync(entryDicts: entryDicts) { (error) in
             if let error = error {
                 NSLog("Error syncing entries from server: \(error)")
                 completion(error)

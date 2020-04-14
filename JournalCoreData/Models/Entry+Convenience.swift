@@ -23,8 +23,12 @@ extension Entry {
         self.title = title
         self.bodyText = bodyText
         self.mood = mood
-        self.timestamp = timestamp
+        self.timestamp = timestamp.timeIntervalSinceReferenceDate
         self.identifier = identifier
+    }
+    
+    var date: Date {
+        Date(timeIntervalSinceReferenceDate: timestamp)
     }
     
     convenience init?(entryRepresentation: EntryRepresentation, context: NSManagedObjectContext = CoreDataStack.shared.mainContext) {

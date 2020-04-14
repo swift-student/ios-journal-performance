@@ -14,34 +14,31 @@ class CoreDataImporter {
         self.context = context
     }
     
-    func sync(entries: [EntryRepresentation], completion: @escaping (Error?) -> Void = { _ in }) {
-        let identifiers = entries.compactMap { $0.identifier }
-        var entryRepsByID = Dictionary(uniqueKeysWithValues: zip(identifiers, entries))
+    func sync(entryDicts: [[String: Any]], completion: @escaping (Error?) -> Void = { _ in }) {
         
+        context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         
         self.context.perform {
-            let existingEntries = self.fetchEntriesFromPersistentStore(with: identifiers, in: self.context)
+            let insertRequest = NSBatchInsertRequest(entity: Entry.entity(), objects: entryDicts)
             
-            for entry in existingEntries {
-                guard let id = entry.identifier,
-                let representation = entryRepsByID[id] else { continue }
-                self.update(entry: entry, with: representation)
-                entryRepsByID.removeValue(forKey: id)
-            }
+            //insertRequest.resultType = NSBatchInsertRequestResultType.objectIDs
+            _ = try? self.context.execute(insertRequest)
             
-            for representation in entryRepsByID.values {
-                _ = Entry(entryRepresentation: representation, context: self.context)
-            }
-
+//            if let objectIDs = result?.result as? [NSManagedObjectID], !objectIDs.isEmpty {
+//                let save = [NSInsertedObjectsKey: objectIDs]
+//                NSManagedObjectContext.mergeChanges(fromRemoteContextSave: save, into: [mainContext])
+//            }
             completion(nil)
         }
+        
+        
     }
     
     private func update(entry: Entry, with entryRep: EntryRepresentation) {
         entry.title = entryRep.title
         entry.bodyText = entryRep.bodyText
         entry.mood = entryRep.mood
-        entry.timestamp = entryRep.timestamp
+        entry.timestamp = entryRep.timestamp?.timeIntervalSinceReferenceDate as! Double
         entry.identifier = entryRep.identifier
     }
     
