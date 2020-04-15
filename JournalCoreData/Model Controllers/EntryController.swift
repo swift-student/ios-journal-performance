@@ -108,7 +108,6 @@ class EntryController {
             }
 
             do {
-                //let entryReps = try JSONDecoder().decode([String: EntryRepresentation].self, from: data).map({$0.value})
                 guard let entryDictsByID = try JSONSerialization.jsonObject(with: data) as? [String: [String: Any]] else {
                     throw NSError(domain: "Unable to cast JSON object to [String: [String: Any]]", code: 0)
                 }
@@ -143,16 +142,7 @@ class EntryController {
                 return
             }
             
-            context.perform {
-                do {
-                    try context.save()
-                    completion(nil)
-                } catch {
-                    NSLog("Error saving sync context: \(error)")
-                    completion(error)
-                    return
-                }
-            }
+            completion(nil)
         }
     }
     
